@@ -1,70 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Severe Weather Alerts</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f4; }
-        .weather-container { width: 80%; max-width: 600px; margin: 20px auto; padding: 20px; background: white; 
-                             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 8px; }
-        h2 { color: #d9534f; }
-        .alert { background: #ffcccc; padding: 10px; margin: 10px 0; border-left: 5px solid red; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Severe Weather Alerts</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .weather-container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+    h2 {
+      color: #d9534f;
+      margin-bottom: 20px;
+    }
+    /* Update the container to be a horizontal scrolling flexbox */
+    #weather-alerts {
+      display: flex;
+      overflow-x: auto;
+      gap: 10px;
+      padding-bottom: 10px;
+      /* Optional: enables smooth snapping for a nice scrolling effect */
+      scroll-snap-type: x mandatory;
+    }
+    /* Style each alert card to take up about 25% of the container's width */
+    .alert {
+      flex: 0 0 calc(25% - 10px);
+      background: #ffcccc;
+      padding: 10px;
+      border-left: 5px solid red;
+      box-sizing: border-box;
+      scroll-snap-align: start;
+    }
+    /* Optional: Hide scrollbar for a cleaner look (works in some browsers) */
+    #weather-alerts::-webkit-scrollbar {
+      display: none;
+    }
+    #weather-alerts {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+    }
+  </style>
 </head>
 <body>
-    <div class="weather-container">
-        <h2>Severe Weather Alerts (US)</h2>
-        <div id="weather-alerts">Loading alerts...</div>
-    </div>
-    
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            async function fetchSevereWeather() {
-                try {
-                    let response = await fetch("https://api.weather.gov/alerts/active");
-                    if (!response.ok) {
-                        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-                    }
+  <div class="weather-container">
+    <h2>Severe Weather Alerts (US)</h2>
+    <div id="weather-alerts">Loading alerts...</div>
+  </div>
 
-                    let data = await response.json();
-                    console.log("API Response:", data);
-
-                    let alertContainer = document.getElementById("weather-alerts");
-
-                    // Check if the alertContainer exists
-                    if (!alertContainer) {
-                        console.error("Error: The 'weather-alerts' div is missing in the HTML.");
-                        return;
-                    }
-
-                    alertContainer.innerHTML = "";
-
-                    if (data.features.length > 0) {
-                        data.features.forEach(alert => {
-                            let alertDiv = document.createElement("div");
-                            alertDiv.classList.add("alert");
-                            alertDiv.innerHTML = `
-                                <strong>${alert.properties.headline}</strong>
-                                <p>${alert.properties.description}</p>
-                                <small>Effective: ${new Date(alert.properties.effective).toLocaleString()}</small>
-                            `;
-                            alertContainer.appendChild(alertDiv);
-                        });
-                    } else {
-                        alertContainer.innerHTML = "<p>No active severe weather alerts.</p>";
-                    }
-                } catch (error) {
-                    console.error("Error fetching weather data:", error);
-                    let alertContainer = document.getElementById("weather-alerts");
-                    if (alertContainer) {
-                        alertContainer.innerHTML = "<p>Error fetching weather data.</p>";
-                    }
-                }
-            }
-
-            fetchSevereWeather();
-        });
-    </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      async function fetchSevereWeather() {
+        try {
+          let response = await fetch("https://api.weather.gov/alerts/active");
+          if (!response.ok) {
+            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+          }
+  
+          let data = await response.json();
+          console.log("API Response:", data);
+  
+          let alertContainer = document.getElementById("weather-alerts");
+  
+          // Check if the alertContainer exists before modifying it
+          if (!alertContainer) {
+            console.error("Error: The 'weather-alerts' div is missing in the HTML.");
+            return;
+          }
+  
+          alertContainer.innerHTML = "";
+  
+          if (data.features.length > 0) {
+            data.features.forEach(alert => {
+              let alertDiv = document.createElement("div");
+              alertDiv.classList.add("alert");
+              alertDiv.innerHTML = `
+                <strong>${alert.properties.headline}</strong>
+                <p>${alert.properties.description}</p>
+                <small>Effective: ${new Date(alert.properties.effective).toLocaleString()}</small>
+              `;
+              alertContainer.appendChild(alertDiv);
+            });
+          } else {
+            alertContainer.innerHTML = "<p>No active severe weather alerts.</p>";
+          }
+        } catch (error) {
+          console.error("Error fetching weather data:", error);
+          let alertContainer = document.getElementById("weather-alerts");
+          if (alertContainer) {
+            alertContainer.innerHTML = "<p>Error fetching weather data.</p>";
+          }
+        }
+      }
+  
+      fetchSevereWeather();
+    });
+  </script>
 </body>
 </html>
