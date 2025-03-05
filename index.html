@@ -24,16 +24,15 @@
       color: #d9534f;
       margin-bottom: 20px;
     }
-    /* Horizontally scrollable container with no vertical scroll */
+    /* Horizontally scrollable container */
     #weather-alerts {
       display: flex;
       overflow-x: auto;
       overflow-y: hidden;
-      flex-wrap: nowrap;
       gap: 10px;
       padding-bottom: 10px;
     }
-    /* Hide scrollbars for a cleaner look */
+    /* Hide scrollbar for cleaner look (browser support varies) */
     #weather-alerts::-webkit-scrollbar {
       display: none;
     }
@@ -41,15 +40,15 @@
       -ms-overflow-style: none; /* IE and Edge */
       scrollbar-width: none; /* Firefox */
     }
-    /* Alert card styling */
+    /* Alert card styling: fixed width so 4 fit in a 1200px container */
     .alert {
-      flex: 0 0 calc(25% - 10px);
+      flex: 0 0 300px;    /* Fixed width of 300px per alert */
+      max-width: 300px;
       background: #ffcccc;
       padding: 10px;
       border-left: 5px solid red;
       box-sizing: border-box;
-      /* Prevent card from extending vertically too far */
-      max-height: 200px;
+      max-height: 200px;  /* Prevent overly tall columns */
       overflow: hidden;
     }
   </style>
@@ -57,7 +56,6 @@
 <body>
   <div class="weather-container">
     <h2>Severe Weather Alerts (US)</h2>
-    <!-- This container will hold your alert cards -->
     <div id="weather-alerts">Loading alerts...</div>
   </div>
 
@@ -79,7 +77,10 @@
             return;
           }
 
+          // Clear current content
           alertContainer.innerHTML = "";
+
+          // Create an alert card for each alert
           if (data.features.length > 0) {
             data.features.forEach(alert => {
               let alertDiv = document.createElement("div");
