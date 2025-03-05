@@ -19,6 +19,7 @@
     </div>
 
     <script>
+    document.addEventListener("DOMContentLoaded", function () {
         async function fetchSevereWeather() {
             try {
                 let response = await fetch("https://api.weather.gov/alerts/active");
@@ -63,7 +64,9 @@
         }
 
         fetchSevereWeather();
-    </script>
+    });
+</script>
+
 </body>
 </html>
 
