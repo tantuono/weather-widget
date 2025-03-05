@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Severe Weather Alerts</title>
+  <title>Severe Weather Alerts by Region</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -15,97 +15,146 @@
       width: 90%;
       max-width: 1200px;
       margin: 20px auto;
-      padding: 20px;
       background: white;
+      padding: 20px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       border-radius: 8px;
     }
     h2 {
+      text-align: center;
       color: #d9534f;
       margin-bottom: 20px;
     }
-    /* Horizontally scrollable container */
-    #weather-alerts {
+    /* Regions container holds four columns side by side */
+    .regions {
       display: flex;
-      overflow-x: auto;
-      overflow-y: hidden;
+      flex-wrap: nowrap;
       gap: 10px;
-      padding-bottom: 10px;
     }
-    /* Hide scrollbar for cleaner look (browser support varies) */
-    #weather-alerts::-webkit-scrollbar {
-      display: none;
+    .region-column {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      max-height: 600px;
+      overflow-y: auto;
     }
-    #weather-alerts {
-      -ms-overflow-style: none; /* IE and Edge */
-      scrollbar-width: none; /* Firefox */
+    .region-column h3 {
+      text-align: center;
+      background: #eee;
+      margin: 0 0 10px;
+      padding: 5px;
+      border-radius: 4px;
     }
-    /* Alert card styling: fixed width so 4 fit in a 1200px container */
     .alert {
-      flex: 0 0 300px;    /* Fixed width of 300px per alert */
-      max-width: 300px;
       background: #ffcccc;
       padding: 10px;
+      margin-bottom: 10px;
       border-left: 5px solid red;
       box-sizing: border-box;
-      max-height: 200px;  /* Prevent overly tall columns */
+      /* Adjust the alert card height as needed */
+      max-height: 200px;
       overflow: hidden;
     }
   </style>
 </head>
 <body>
   <div class="weather-container">
-    <h2>Severe Weather Alerts (US)</h2>
-    <div id="weather-alerts">Loading alerts...</div>
+    <h2>Severe Weather Alerts by Region</h2>
+    <div class="regions">
+      <div id="region1" class="region-column">
+        <h3>Region 1 (Eastern)</h3>
+      </div>
+      <div id="region2" class="region-column">
+        <h3>Region 2 (Central)</h3>
+      </div>
+      <div id="region3" class="region-column">
+        <h3>Region 3 (Mountain)</h3>
+      </div>
+      <div id="region4" class="region-column">
+        <h3>Region 4 (Pacific)</h3>
+      </div>
+    </div>
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
       async function fetchSevereWeather() {
         try {
           let response = await fetch("https://api.weather.gov/alerts/active");
           if (!response.ok) {
             throw new Error(`API request failed: ${response.status} ${response.statusText}`);
           }
-
           let data = await response.json();
           console.log("API Response:", data);
 
-          let alertContainer = document.getElementById("weather-alerts");
-          if (!alertContainer) {
-            console.error("Error: The 'weather-alerts' div is missing in the HTML.");
-            return;
+          // Reset the region columns (keep the header intact)
+          ["region1", "region2", "region3", "region4"].forEach(id => {
+            const column = document.getElementById(id);
+            if (column) {
+              const header = column.querySelector("h3").outerHTML;
+              column.innerHTML = header;
+            }
+          });
+
+          // Define a mapping of regions to state abbreviations
+          const regionMapping = {
+            "1": ["ME", "NH", "VT", "MA", "RI", "CT", "NY", "NJ", "PA", "MD", "DE", "DC", "NC", "SC", "GA", "FL"],
+            "2": ["TX", "OK", "AR", "LA", "MS", "AL", "TN", "KY", "MO", "IA", "MN", "WI", "IL"],
+            "3": ["CO", "NM", "AZ", "UT", "MT", "ID", "WY"],
+            "4": ["CA", "OR", "WA", "AK", "HI"]
+          };
+
+          // Helper function to decide which region an alert belongs to.
+          // It checks if the alert's areaDesc (converted to uppercase) includes any of the state abbreviations.
+          function getRegion(alert) {
+            if (!alert.properties || !alert.properties.areaDesc) return "4"; // Default to region 4 if missing
+            let area = alert.properties.areaDesc.toUpperCase();
+            for (let region in regionMapping) {
+              for (let state of regionMapping[region]) {
+                if (area.indexOf(state) !== -1) {
+                  return region;
+                }
+              }
+            }
+            return "4"; // Default region if nothing matches
           }
 
-          // Clear current content
-          alertContainer.innerHTML = "";
-
-          // Create an alert card for each alert
+          // Process each alert and append it to the appropriate region column
           if (data.features.length > 0) {
             data.features.forEach(alert => {
-              let alertDiv = document.createElement("div");
-              alertDiv.classList.add("alert");
-              alertDiv.innerHTML = `
-                <strong>${alert.properties.headline}</strong>
-                <p>${alert.properties.description}</p>
-                <small>Effective: ${new Date(alert.properties.effective).toLocaleString()}</small>
-              `;
-              alertContainer.appendChild(alertDiv);
+              let region = getRegion(alert);
+              let container = document.getElementById("region" + region);
+              if (container) {
+                let alertDiv = document.createElement("div");
+                alertDiv.classList.add("alert");
+                alertDiv.innerHTML = `
+                  <strong>${alert.properties.headline}</strong>
+                  <p>${alert.properties.description}</p>
+                  <small>Effective: ${new Date(alert.properties.effective).toLocaleString()}</small>
+                `;
+                container.appendChild(alertDiv);
+              }
             });
           } else {
-            alertContainer.innerHTML = "<p>No active severe weather alerts.</p>";
+            // If no alerts, display a message in each region column.
+            ["region1", "region2", "region3", "region4"].forEach(id => {
+              let container = document.getElementById(id);
+              if (container) {
+                container.innerHTML += "<p>No active alerts.</p>";
+              }
+            });
           }
         } catch (error) {
           console.error("Error fetching weather data:", error);
-          let alertContainer = document.getElementById("weather-alerts");
-          if (alertContainer) {
-            alertContainer.innerHTML = "<p>Error fetching weather data.</p>";
-          }
         }
       }
-
       fetchSevereWeather();
     });
+  </script>
+</body>
+</html>
+
   </script>
 </body>
 </html>
